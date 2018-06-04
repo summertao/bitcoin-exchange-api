@@ -70,6 +70,6 @@ type WSWallet struct {
 	WithdrawalLock []interface{} `json:"withdrawalLock,omitempty"`
 }
 
-type AbstructAPI struct {
+type AbstractAPI struct {
 	Configuration *Configuration
 }

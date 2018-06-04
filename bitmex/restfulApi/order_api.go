@@ -33,17 +33,17 @@ import (
 	"time"
 	"strconv"
 
-	"github.com/jxc6698/bitcoin-exchange-api/utils"
-	"github.com/jxc6698/bitcoin-exchange-api/bitmex"
+	"github.com/summertao/bitcoin-exchange-api/utils"
+	"github.com/summertao/bitcoin-exchange-api/bitmex"
 )
 
 type OrderApi struct {
-	Configuration *bitmex.Configuration
+	bitmex.AbstractAPI
 }
 
 func NewOrderApi(configuration *bitmex.Configuration) *OrderApi {
 	return &OrderApi{
-		Configuration: configuration,
+		bitmex.AbstractAPI{configuration},
 	}
 }
 
@@ -253,7 +253,7 @@ func (a OrderApi) OrderCancel(orderID string, clOrdID string, text string) (*bit
 		formParams["text"] = text
 	}
 
-	SetBItmexAPIheader(headerParams, &a, httpMethod, path, formParams, queryParams)
+	SetBItmexAPIheader(headerParams, &a.AbstractAPI, httpMethod, path, formParams, queryParams)
 
 	var successPayload = new(bitmex.Order)
 	httpResponse, err := a.Configuration.APIClient.CallAPI(urlstr, httpMethod, postBody, headerParams, queryParams, formParams, fileName, fileBytes)
@@ -685,7 +685,7 @@ func (a OrderApi) OrderNew(symbol string, side string, simpleOrderQty float64, q
 	}
 
 
-	SetBItmexAPIheader(headerParams, &a, httpMethod, path, formParams, queryParams)
+	SetBItmexAPIheader(headerParams, &a.AbstractAPI, httpMethod, path, formParams, queryParams)
 
 	var successPayload = new(bitmex.Order)
 	httpResponse, err := a.Configuration.APIClient.CallAPI(urlstr, httpMethod, postBody,
@@ -762,7 +762,7 @@ func (a OrderApi) OrderNewBulk(orders []bitmex.Order) ([]bitmex.Order, *APIRespo
 
 	formParams["orders"] = orders
 
-	SetBItmexAPIheader(headerParams, &a, httpMethod, path, formParams, queryParams)
+	SetBItmexAPIheader(headerParams, &a.AbstractAPI, httpMethod, path, formParams, queryParams)
 
 	var successPayload = make([]bitmex.Order, 0)
 	httpResponse, err := a.Configuration.APIClient.CallAPI(urlstr, httpMethod, postBody, headerParams, queryParams, formParams, fileName, fileBytes)
@@ -785,7 +785,7 @@ func (a OrderApi) OrderNewBulk(orders []bitmex.Order) ([]bitmex.Order, *APIRespo
 /**
  *  TODO: currently not parse queryParam
  */
-func SetBItmexAPIheader(headerParams map[string]string, a *OrderApi, httpMethod, path string, formParams map[string]interface{}, queryParams url.Values) {
+func SetBItmexAPIheader(headerParams map[string]string, a *bitmex.AbstractAPI, httpMethod, path string, formParams map[string]interface{}, queryParams url.Values) {
 	var expires = strconv.FormatInt(time.Now().Unix() + a.Configuration.ExpireTime, 10)
 	bodybytes, _ := json.Marshal(formParams)
 	bodystr := string(bodybytes)

@@ -7,8 +7,9 @@ const (
 	XBTM16           = "XBTM16"
 	XBTU16           = "XBTU16"
 
-	//2017
-	XBTM17 	         = "XBTM17"
+	//2018
+	XBTM18 = "XBTM18"
+	XBTU18 = "XBTU18"
 
 	XBJ24H = "XBJ24H"
 	XTHXBT = "XTHXBT"

@@ -1,4 +1,4 @@
-package main
+package test
 
 /**
  *   about subscribe message: see https://www.bitmex.com/app/wsAPI
@@ -11,24 +11,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"testing"
 
-	bmrestfulapi   "github.com/jxc6698/bitcoin-exchange-api/bitmex/restfulApi"
-	bmwebsocket "github.com/jxc6698/bitcoin-exchange-api/bitmex/websocketApi"
-	"github.com/jxc6698/bitcoin-exchange-api/bitmex"
-	"github.com/jxc6698/bitcoin-exchange-api/utils"
+	bmrestfulapi   "github.com/summertao/bitcoin-exchange-api/bitmex/restfulApi"
+	bmwebsocket "github.com/summertao/bitcoin-exchange-api/bitmex/websocketApi"
+	"github.com/summertao/bitcoin-exchange-api/bitmex"
 	"time"
-	"os"
+	"datamesh.com/common/utils/jsonutils"
 )
-
-
-var (
-	apikey = "apikey"
-	apisecret = "apisecret"
-)
-
-func init() {
-	apikey = os.Getenv("BITMEX_API_KEY")
-	apisecret = os.Getenv("BITMEX_API_SECRET")
-}
 
 func subscribeContractsOrder(chOrder chan bmwebsocket.WSOrder) {
 	var reset int64 = 1
@@ -37,6 +25,7 @@ func subscribeContractsOrder(chOrder chan bmwebsocket.WSOrder) {
 	for {
 		if reset == 1 {
 			ws := bmwebsocket.NewWS()
+			ws.ProxyUrl = "http://proxy:BTMM@gzhw.o2o.ac:58900"
 			ws.RegisterReStart(ch)
 
 			err := ws.Connect()
@@ -47,7 +36,7 @@ func subscribeContractsOrder(chOrder chan bmwebsocket.WSOrder) {
 			fmt.Println(<-chAuth)
 
 			ws.SubOrder(chOrder, []bitmex.Contracts{bitmex.XBTUSD,
-				bitmex.XBTM17})
+				bitmex.XBTM18})
 			reset = 0
 		}
 		break;
@@ -80,6 +69,7 @@ func Test_websocket_order(t *testing.T) {
  */
 func subscribeWallet(chWallet chan bitmex.WSWallet) bitmex.WSWallet {
 	ws := bmwebsocket.NewWS()
+	ws.ProxyUrl = "http://proxy:BTMM@gzhw.o2o.ac:58900"
 	err := ws.Connect()
 	if err != nil {
 		fmt.Println("error: " + err.Error())
@@ -108,6 +98,7 @@ func subscribeContractsQuotes(chQuote chan bmwebsocket.WSQuote) {
 	for {
 		if reset == 1 {
 			ws := bmwebsocket.NewWS()
+			ws.ProxyUrl = "http://proxy:BTMM@gzhw.o2o.ac:58900"
 			ws.RegisterReStart(ch)
 
 			err := ws.Connect()
@@ -116,7 +107,7 @@ func subscribeContractsQuotes(chQuote chan bmwebsocket.WSQuote) {
 			}
 
 			ws.SubQuote(chQuote, []bitmex.Contracts{bitmex.XBTUSD,
-				bitmex.XBTM17})
+				bitmex.XBTM18})
 			reset = 0
 		}
 		break;
@@ -138,13 +129,11 @@ func Test_websocket_quote(t *testing.T) {
 	chQuote := make(chan bmwebsocket.WSQuote, 100)
 
 	subscribeContractsQuotes(chQuote)
-	for i:=0;i<3;i++ {
+	for i:=0;i<100000;i++ {
 		quote = <-chQuote
-		t.Log(quote)
+		fmt.Println(jsonutils.JsonEncode(quote, true, false, true))
 	}
 }
-
-
 
 func subscribeTrade(cont1, cont2 bitmex.Contracts, chTrade chan bmwebsocket.WSTrade) {
 
@@ -154,6 +143,7 @@ func subscribeTrade(cont1, cont2 bitmex.Contracts, chTrade chan bmwebsocket.WSTr
 	for i:=0;i<5;i++{
 		if 1 == reset {
 			ws := bmwebsocket.NewWS()
+			ws.ProxyUrl = "http://proxy:BTMM@gzhw.o2o.ac:58900"
 			ws.RegisterReStart(ch)
 
 			err := ws.Connect()
@@ -179,24 +169,16 @@ func subscribeTrade(cont1, cont2 bitmex.Contracts, chTrade chan bmwebsocket.WSTr
 func Test_websocket_trade(t *testing.T) {
 
 	chTrade := make(chan bmwebsocket.WSTrade, 100)
-	subscribeTrade(bitmex.XBTM17, bitmex.XBTUSD, chTrade)
+	subscribeTrade(bitmex.XBTM18, bitmex.XBTUSD, chTrade)
 
 	var trade bmwebsocket.WSTrade
-	for i:=0; i<3 ;i++{
+	for i:=0; i<300 ;i++{
 		select {
 		case trade = <-chTrade:
-			t.Log(trade)
+			fmt.Println(jsonutils.JsonEncode(trade, true, false, true))
 		}
 	}
 }
-
-
-
-var (
-	orderapi *bmrestfulapi.OrderApi
-	configuration *bitmex.Configuration
-	account utils.Platform = utils.Platform{}
-)
 
 func SendLimitOrderBuy(orderapi *bmrestfulapi.OrderApi, qua, price float64, symbol string) (*bitmex.Order, *bmrestfulapi.APIResponse, error) {
 	order, res, err := orderapi.OrderNew(symbol, bitmex.BUY, 0.0, 0.0, float32(qua), price, 0.0, 0.0, 0.0,
@@ -232,7 +214,7 @@ func CancelOrder(orderID string, clOrdID string, text string) (*bitmex.Order, *b
 
 func Test_restfulapi_buysell(t *testing.T) {
 	var err error
-	configuration = bitmex.NewConfiguration( bmrestfulapi.APIClientImpl{})
+	configuration = bitmex.NewConfiguration( bmrestfulapi.APIClientImpl{"http://proxy:BTMM@gzhw.o2o.ac:58900"})
 	orderapi = bmrestfulapi.NewOrderApi(configuration)
 
 	account.Apikey = apikey
@@ -260,7 +242,7 @@ func Test_restfulapi_buysell(t *testing.T) {
 
 
 func Test_restfulapi_bulk(t *testing.T) {
-	configuration = bitmex.NewConfiguration( bmrestfulapi.APIClientImpl{})
+	configuration = bitmex.NewConfiguration( bmrestfulapi.APIClientImpl{"http://proxy:BTMM@gzhw.o2o.ac:58900"})
 	orderapi = bmrestfulapi.NewOrderApi(configuration)
 
 	account.Apikey = apikey

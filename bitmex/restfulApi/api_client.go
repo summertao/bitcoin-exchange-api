@@ -34,6 +34,7 @@ import (
 )
 
 type APIClientImpl struct {
+	ProxyUrl string
 }
 
 func (c APIClientImpl) SelectHeaderContentType(contentTypes []string) string {
@@ -77,6 +78,9 @@ func (c APIClientImpl) CallAPI(path string, method string,
 
 	// TODO: set debug flag, should Configuration.Debug
 	resty.SetDebug(false)
+	if c.ProxyUrl != "" {
+		resty.SetProxy(c.ProxyUrl)
+	}
 
 	request := prepareRequest(postBody, headerParams, queryParams, formParams, fileName, fileBytes)
 

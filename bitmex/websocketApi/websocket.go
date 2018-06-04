@@ -8,9 +8,11 @@ import (
 	"errors"
 
 	"github.com/apex/log"
-
-	"golang.org/x/net/websocket"
-	"github.com/jxc6698/bitcoin-exchange-api/bitmex"
+	"github.com/summertao/bitcoin-exchange-api/bitmex"
+	"net/url"
+	"net/http"
+	"fmt"
+	"github.com/gorilla/websocket"
 )
 
 const wsURL = "wss://www.bitmex.com/realtime"
@@ -24,11 +26,13 @@ const (
 //WS - websocket connection object
 type WS struct {
 	sync.Mutex
+	WSUri *url.URL
 	conn       *websocket.Conn
 	log        *log.Logger
 	nonce      int64
 	key        string
 	secret     string
+	ProxyUrl string
 	chTrade    map[chan WSTrade][]bitmex.Contracts
 	chQuote    map[chan WSQuote][]bitmex.Contracts
 	chOrder    map[chan WSOrder][]bitmex.Contracts
@@ -41,7 +45,9 @@ type WS struct {
 
 //NewWS - creates new websocket object
 func NewWS() *WS {
+	u, _ := url.Parse(wsURL)
 	return &WS{
+		WSUri: u,
 		nonce:      time.Now().Unix(),
 		chTrade:    make(map[chan WSTrade][]bitmex.Contracts, 0),
 		chQuote:    make(map[chan WSQuote][]bitmex.Contracts, 0),
@@ -53,9 +59,14 @@ func NewWS() *WS {
 
 //Connect - connects
 func (ws *WS) Connect() error {
-	conn, err := websocket.Dial(wsURL, "", "http://localhost/")
-
+	dialer := &websocket.Dialer{}
+	if ws.ProxyUrl != "" {
+		proxyUri, _ := url.Parse(ws.ProxyUrl)
+		dialer.Proxy = http.ProxyURL(proxyUri)
+	}
+	conn, _, err := dialer.Dial(ws.WSUri.String(), nil)
 	if err != nil {
+		fmt.Printf("Can not connect to server, err = %s\n", err.Error())
 		return err
 	}
 
@@ -77,8 +88,7 @@ func (ws *WS) Disconnect() error {
 
 func (ws *WS) read() {
 	for {
-		var msg string
-		err := websocket.Message.Receive(ws.conn, &msg)
+		_, msgBytes, err := ws.conn.ReadMessage()
 		if nil != err {
 			log.Info("Recive error: ")
 			log.Info(err.Error())
@@ -87,6 +97,7 @@ func (ws *WS) read() {
 			return
 		}
 
+		msg := string(msgBytes)
 		log.Debugf("Raw: %v", msg)
 
 		switch {
@@ -308,7 +319,7 @@ func (ws *WS) send(msg string) {
 	log.Debugf("Writing WS: %#v", string(msg))
 	ws.Lock()
 
-	if _, err := ws.conn.Write([]byte(msg)); err != nil {
+	if err := ws.conn.WriteMessage(websocket.TextMessage, []byte(msg)); err != nil {
 		ws.fatal(err)
 	}
 }

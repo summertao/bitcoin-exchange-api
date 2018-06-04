@@ -1,4 +1,4 @@
-package main
+package test
 
 /**
  *   about subscribe message: see https://www.bitmex.com/app/wsAPI
@@ -8,15 +8,12 @@ package main
 import (
 	"fmt"
 
-	"github.com/stretchr/testify/assert"
 	"testing"
 
-	bmrestfulapi   "github.com/jxc6698/bitcoin-exchange-api/bitmex/restfulApi"
-	bmwebsocket "github.com/jxc6698/bitcoin-exchange-api/bitmex/websocketApi"
-	"github.com/jxc6698/bitcoin-exchange-api/bitmex"
-	"github.com/jxc6698/bitcoin-exchange-api/utils"
-	"time"
-	"os"
+	bmrestfulapi   "github.com/summertao/bitcoin-exchange-api/bitmex/restfulApi"
+	"github.com/summertao/bitcoin-exchange-api/bitmex"
+	"github.com/summertao/bitcoin-exchange-api/utils"
+	"datamesh.com/common/utils/jsonutils"
 )
 
 
@@ -26,8 +23,8 @@ var (
 )
 
 func init() {
-	apikey = os.Getenv("BITMEX_API_KEY")
-	apisecret = os.Getenv("BITMEX_API_SECRET")
+	apikey = "EF8Jzeb_-li0kqc5ExsOP3H2"
+	apisecret = "4Kin9X74rt8lZv8XYqq6LmGU5mJACxjlNvr4X2GtAR_hYqcu"
 }
 
 
@@ -42,11 +39,11 @@ var (
 
 func Test_restfulapi_position(t *testing.T) {
 	var (
-		po *bmrestfulapi.Position
+		po *bitmex.Position
 		err error
 	)
 
-	configuration = bitmex.NewConfiguration( bmrestfulapi.APIClientImpl{})
+	configuration = bitmex.NewConfiguration(bmrestfulapi.APIClientImpl{"http://proxy:BTMM@gzhw.o2o.ac:58900"})
 	positionapi = bmrestfulapi.NewPositionApi(configuration)
 
 	account.Apikey = apikey
@@ -61,7 +58,7 @@ func Test_restfulapi_position(t *testing.T) {
 	if nil != err {
 		fmt.Println(err)
 	}
-	fmt.Println(po)
+	fmt.Println(jsonutils.JsonEncode(po, true, false, true))
 
 }
 

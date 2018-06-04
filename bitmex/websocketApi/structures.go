@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/satori/go.uuid"
-	"github.com/jxc6698/bitcoin-exchange-api/bitmex"
+	"github.com/summertao/bitcoin-exchange-api/bitmex"
 )
 
 //WSTrade - trade structure

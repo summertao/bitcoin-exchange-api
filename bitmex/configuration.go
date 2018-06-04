@@ -26,7 +26,7 @@ import (
 	"encoding/base64"
 	"strconv"
 
-	"github.com/jxc6698/bitcoin-exchange-api/utils"
+	"github.com/summertao/bitcoin-exchange-api/utils"
 	"github.com/go-resty/resty"
 	"net/url"
 )
@@ -64,7 +64,6 @@ type Configuration struct {
 	DefaultHeader map[string]string `json:"defaultHeader,omitempty"`
 	UserAgent     string            `json:"userAgent,omitempty"`
 	APIClient     APIClient         `json:"APIClient,omitempty"`
-
 	/** new added by jxc */
 	Account       *utils.Platform
 	Nonce 		int64
