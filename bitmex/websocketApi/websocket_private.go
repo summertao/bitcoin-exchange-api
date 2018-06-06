@@ -24,6 +24,8 @@ func (ws *WS) Auth(key, secret string) chan struct{} {
 		key, nonce, signature,
 	)
 
+	fmt.Println(msg)
+
 	ch := make(chan struct{})
 	ws.Lock()
 	ws.chSucc["authKey"] = append(ws.chSucc["authKey"], ch)
